@@ -24,7 +24,7 @@ float calculate_average(const Student *s) {
     for (int i = 0; i < NUM_TESTS; i++, g++)
         sum += *g;
     return sum / NUM_TESTS;
-
+}
 
 float grade_stability_score(const Student *s) {
     float avg = calculate_average(s);
@@ -330,5 +330,7 @@ int main(void) {
 
     free(students);   
     students = NULL;
+
     return 0;
+
 }
