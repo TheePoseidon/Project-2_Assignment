@@ -1,52 +1,28 @@
-/* =====================================================================
-   DYNAMIC TEXT ANALYSIS TOOL
-   -----------------------------------------------------------------
-   Developer Student ID : 54321
-   Analyzed excerpt      : Opening line of "Pride and Prejudice" by
-                            Jane Austen (1813) - public domain text.
-   Custom Analysis Func  : Lexical Diversity Score (Type-Token Ratio)
-                            -> measures how varied the vocabulary is
-                               (unique words / total words * 100),
-                               a rule not among the assignment's own
-                               examples (vowel density, avg word
-                               length, palindrome detection).
-   -----------------------------------------------------------------
-   Demonstrates:
-     - dynamic memory allocation for text, word array, and stats array
-     - pointer traversal to split raw text into words
-     - struct wordStat { char name[40]; int count; }
-     - function pointers for analysis dispatch
-     - strlen / strcmp / strcpy usage
-     - printing memory addresses of key dynamic structures
-   ===================================================================== */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-#define STUDENT_ID       54321
+
 #define MAX_WORD_LEN     40
 #define INITIAL_CAPACITY 16
 
-/* Required structure (exact fields as specified) ------------------- */
+
 struct wordStat {
     char name[40];
     int  count;
 };
 
-/* Context bundling every dynamically-allocated structure we work with */
+
 typedef struct {
-    char   *text;         /* dynamically allocated raw text buffer     */
-    char  **words;        /* dynamically allocated array of word ptrs  */
+    char   *text;         
+    char  **words;        
     int     wordCount;
-    struct wordStat *stats; /* dynamically allocated aggregated stats  */
+    struct wordStat *stats; 
     int     statCount;
 } TextContext;
 
-/* ---------------------------------------------------------------- */
-/* Prototypes                                                         */
-/* ---------------------------------------------------------------- */
+
 static void print_program_header(void);
 static void load_default_text(TextContext *ctx);
 static void load_custom_text(TextContext *ctx);
@@ -59,15 +35,15 @@ static void print_tokens(const TextContext *ctx);
 static void print_stats_table(const TextContext *ctx);
 static void print_memory_addresses(const TextContext *ctx);
 
-/* Analysis functions (all share one signature -> function pointers) */
+
 static void count_words(TextContext *ctx);
 static void longest_word(TextContext *ctx);
 static void most_frequent(TextContext *ctx);
-static void lexical_diversity(TextContext *ctx);   /* custom rule    */
+static void lexical_diversity(TextContext *ctx);   
 
 typedef void (*AnalysisFunc)(TextContext *);
 
-/* ================================================================== */
+
 int main(void)
 {
     TextContext ctx = {0};
@@ -125,7 +101,7 @@ int main(void)
                 break;
             case 3: print_tokens(&ctx); break;
             case 4: print_stats_table(&ctx); break;
-            case 5: analyses[0](&ctx); break;   /* function-pointer dispatch */
+            case 5: analyses[0](&ctx); break;   
             case 6: analyses[1](&ctx); break;
             case 7: analyses[2](&ctx); break;
             case 8: analyses[3](&ctx); break;
@@ -139,25 +115,20 @@ int main(void)
     return 0;
 }
 
-/* ================================================================== */
-/* Setup / header                                                      */
-/* ================================================================== */
+
 static void print_program_header(void)
 {
-    printf("========================================================\n");
     printf(" DYNAMIC TEXT ANALYSIS TOOL\n");
-    printf(" Student ID: %d\n", STUDENT_ID);
     printf(" Custom Analysis Function: Lexical Diversity Score\n");
-    printf("========================================================\n");
 }
 
 static void flush_stdin(void)
 {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF) { /* discard */ }
+    while ((c = getchar()) != '\n' && c != EOF) { }
 }
 
-/* Frees any previously-held text/word/stat memory before loading new */
+
 static void reset_context(TextContext *ctx)
 {
     if (ctx->words) {
@@ -177,17 +148,17 @@ static void reset_context(TextContext *ctx)
     ctx->statCount = 0;
 }
 
-/* Dynamically allocates ctx->text and copies "source" into it        */
+
 static void set_text(TextContext *ctx, const char *source)
 {
     reset_context(ctx);
-    size_t len = strlen(source);              /* strlen usage */
+    size_t len = strlen(source);              
     ctx->text = (char *)malloc(len + 1);
     if (!ctx->text) {
         fprintf(stderr, "Fatal: memory allocation failed.\n");
         exit(EXIT_FAILURE);
     }
-    strcpy(ctx->text, source);                /* strcpy usage */
+    strcpy(ctx->text, source);                
 }
 
 static void load_default_text(TextContext *ctx)
@@ -210,7 +181,7 @@ static void load_custom_text(TextContext *ctx)
         printf("Input error. Keeping previous text.\n");
         return;
     }
-    /* strip trailing newline */
+
     size_t len = strlen(buffer);
     if (len > 0 && buffer[len - 1] == '\n') buffer[len - 1] = '\0';
 
@@ -221,9 +192,7 @@ static void load_custom_text(TextContext *ctx)
     set_text(ctx, buffer);
 }
 
-/* ================================================================== */
-/* Splitting text into words via pointer traversal                     */
-/* ================================================================== */
+
 static void split_into_words(TextContext *ctx)
 {
     if (ctx->words) {
@@ -237,18 +206,18 @@ static void split_into_words(TextContext *ctx)
     ctx->words = (char **)malloc(sizeof(char *) * capacity);
     if (!ctx->words) { fprintf(stderr, "Allocation failed.\n"); exit(EXIT_FAILURE); }
 
-    char *p = ctx->text;               /* pointer traversal starts here */
+    char *p = ctx->text;               
     while (*p != '\0') {
-        /* skip any non-alphabetic characters (spaces, punctuation) */
+        
         while (*p != '\0' && !isalpha((unsigned char)*p)) p++;
         if (*p == '\0') break;
 
-        char *start = p;               /* mark start of a word via pointer */
-        while (*p != '\0' && isalpha((unsigned char)*p)) p++;  /* advance pointer to end of word */
+        char *start = p;               
+        while (*p != '\0' && isalpha((unsigned char)*p)) p++;  
 
-        long wlen = p - start;         /* pointer subtraction gives length */
+        long wlen = p - start;         
         if (wlen <= 0) continue;
-        if (wlen >= MAX_WORD_LEN) wlen = MAX_WORD_LEN - 1;  /* guard overflow */
+        if (wlen >= MAX_WORD_LEN) wlen = MAX_WORD_LEN - 1;  
 
         if (ctx->wordCount == capacity) {
             capacity *= 2;
@@ -266,9 +235,7 @@ static void split_into_words(TextContext *ctx)
     }
 }
 
-/* ================================================================== */
-/* Building aggregated word statistics (dynamic array of wordStat)     */
-/* ================================================================== */
+
 static void build_word_stats(TextContext *ctx)
 {
     if (ctx->stats) { free(ctx->stats); ctx->stats = NULL; }
@@ -279,7 +246,7 @@ static void build_word_stats(TextContext *ctx)
     if (!ctx->stats) { fprintf(stderr, "Allocation failed.\n"); exit(EXIT_FAILURE); }
 
     for (int i = 0; i < ctx->wordCount; i++) {
-        /* build a lowercase copy so "The" and "the" count as one word */
+       
         char lower[MAX_WORD_LEN];
         size_t len = strlen(ctx->words[i]);           /* strlen usage */
         if (len >= MAX_WORD_LEN) len = MAX_WORD_LEN - 1;
@@ -317,9 +284,7 @@ static void free_context(TextContext *ctx)
     reset_context(ctx);
 }
 
-/* ================================================================== */
-/* Display helpers                                                     */
-/* ================================================================== */
+
 static void print_tokens(const TextContext *ctx)
 {
     printf("\n-- Word Tokens (split via pointer traversal) --\n");
@@ -355,9 +320,7 @@ static void print_memory_addresses(const TextContext *ctx)
     }
 }
 
-/* ================================================================== */
-/* Required analysis functions                                         */
-/* ================================================================== */
+
 static void count_words(TextContext *ctx)
 {
     printf("\n-- Count Words --\n");
@@ -369,12 +332,12 @@ static void longest_word(TextContext *ctx)
 {
     if (ctx->wordCount == 0) { printf("No words to analyze.\n"); return; }
 
-    char **p = ctx->words;             /* pointer traversal over word array */
+    char **p = ctx->words;             
     char *longest = *p;
     size_t longest_len = strlen(*p);
 
     for (int i = 0; i < ctx->wordCount; i++, p++) {
-        size_t len = strlen(*p);       /* strlen usage */
+        size_t len = strlen(*p);       
         if (len > longest_len) {
             longest_len = len;
             longest = *p;
@@ -389,7 +352,7 @@ static void most_frequent(TextContext *ctx)
 {
     if (ctx->statCount == 0) { printf("No words to analyze.\n"); return; }
 
-    struct wordStat *p = ctx->stats;   /* pointer traversal over stats array */
+    struct wordStat *p = ctx->stats;   
     struct wordStat *top = p;
 
     for (int i = 0; i < ctx->statCount; i++, p++) {
@@ -400,15 +363,7 @@ static void most_frequent(TextContext *ctx)
     printf("\"%s\" appears %d time(s)\n", top->name, top->count);
 }
 
-/* ================================================================== */
-/* CUSTOM ANALYSIS: LEXICAL DIVERSITY SCORE (Type-Token Ratio)        */
-/*                                                                     */
-/* Rationale: raw word/frequency counts don't say much about how      */
-/* *varied* a passage's vocabulary is. This computes the ratio of     */
-/* unique words to total words (as a percentage). A ratio near 100%   */
-/* means almost every word is different (highly diverse); a low       */
-/* ratio means heavy repetition of the same words.                    */
-/* ================================================================== */
+
 static void lexical_diversity(TextContext *ctx)
 {
     if (ctx->wordCount == 0) { printf("No words to analyze.\n"); return; }
