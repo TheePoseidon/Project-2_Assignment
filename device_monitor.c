@@ -11,7 +11,7 @@
 #define TYPE_PRESSURE    1
 #define TYPE_VOLTAGE     2
 
-/* Required structure (exact layout as specified) -------------------- */
+
 struct Device {
     char name[30];
     int  type;
@@ -22,15 +22,13 @@ struct Device {
     } reading;
 };
 
-/* Callback function pointer type */
+
 typedef void (*CallbackFunc)(struct Device *);
 
-/* Required dispatcher prototype (exact signature as specified) ------ */
+
 void process_device(struct Device *dev, void (*callback)(struct Device *));
 
-/* ---------------------------------------------------------------- */
-/* Prototypes                                                         */
-/* ---------------------------------------------------------------- */
+
 static void print_program_header(void);
 static void load_default_devices(struct Device **arr, int *count, int *capacity);
 static int  ensure_capacity(struct Device **arr, int *capacity, int count);
@@ -41,17 +39,17 @@ static CallbackFunc select_callback(int type);
 static void run_simulation(struct Device *arr, int count);
 static void flush_stdin(void);
 
-/* Required-example callback functions (all share the fixed signature) */
+
 static void temperature_monitor(struct Device *dev);
 static void pressure_monitor(struct Device *dev);
 static void battery_monitor(struct Device *dev);
 
-/* Custom, student-designed callback + its supporting log ------------ */
+
 static void reading_logger(struct Device *dev);
 static void print_log(void);
 static void free_log(void);
 
-/* ================================================================== */
+
 int main(void)
 {
     struct Device *devices = NULL;
