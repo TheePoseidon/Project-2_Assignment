@@ -96,22 +96,18 @@ int main(void)
     return 0;
 }
 
-/* ================================================================== */
-/* Setup / header                                                      */
-/* ================================================================== */
+
 static void print_program_header(void)
 {
-    printf("========================================================\n");
     printf(" DEVICE MONITORING SIMULATOR\n");
     printf(" Device Types: Temperature, Pressure, Voltage/Battery\n");
     printf(" Custom Callback: reading_logger()\n");
-    printf("========================================================\n");
 }
 
 static void flush_stdin(void)
 {
     int c;
-    while ((c = getchar()) != '\n' && c != EOF) { /* discard */ }
+    while ((c = getchar()) != '\n' && c != EOF) { }
 }
 
 static const char *type_name(int type)
@@ -124,7 +120,7 @@ static const char *type_name(int type)
     }
 }
 
-/* Doubles capacity via realloc whenever the array is full            */
+
 static int ensure_capacity(struct Device **arr, int *capacity, int count)
 {
     if (count < *capacity) return 1;
@@ -139,8 +135,6 @@ static int ensure_capacity(struct Device **arr, int *capacity, int count)
     return 1;
 }
 
-/* Loads a starter fleet of 6 devices (2 of each required type) into
-   a dynamically allocated array.                                    */
 static void load_default_devices(struct Device **arr, int *count, int *capacity)
 {
     *capacity = INITIAL_CAPACITY;
@@ -163,12 +157,12 @@ static void load_default_devices(struct Device **arr, int *count, int *capacity)
 
     for (int i = 0; i < n; i++) {
         ensure_capacity(arr, capacity, *count);
-        struct Device *slot = *arr + (*count);   /* pointer arithmetic */
+        struct Device *slot = *arr + (*count);   
         strncpy(slot->name, seed[i].name, NAME_LEN - 1);
         slot->name[NAME_LEN - 1] = '\0';
         slot->type = seed[i].type;
 
-        /* initialize the union member matching this device's type */
+ 
         switch (slot->type) {
             case TYPE_TEMPERATURE: slot->reading.temperature = 20.0f; break;
             case TYPE_PRESSURE:    slot->reading.pressure    = 1013;  break;
@@ -218,10 +212,10 @@ static void display_devices(struct Device *arr, int count)
     printf("%-16s %-18s %-15s\n", "Name", "Type", "Reading");
     printf("---------------------------------------------------\n");
 
-    struct Device *p = arr;            /* pointer traversal */
+    struct Device *p = arr;
     for (int i = 0; i < count; i++, p++) {
         printf("%-16s %-18s ", p->name, type_name(p->type));
-        /* print reading using the correct union member for this type */
+        
         switch (p->type) {
             case TYPE_TEMPERATURE: printf("%.2f C\n", p->reading.temperature); break;
             case TYPE_PRESSURE:    printf("%d hPa\n", p->reading.pressure);    break;
@@ -232,17 +226,13 @@ static void display_devices(struct Device *arr, int count)
     printf("Total devices: %d\n", count);
 }
 
-/* ================================================================== */
-/* Callback dispatcher (required exact signature)                     */
-/* ================================================================== */
+
 void process_device(struct Device *dev, void (*callback)(struct Device *))
 {
     if (dev == NULL || callback == NULL) return;
-    callback(dev);   /* invoke through the function pointer */
+    callback(dev);
 }
 
-/* Picks the right monitor callback for a device's type -- returns a
-   function pointer, demonstrating dynamic callback selection.       */
 static CallbackFunc select_callback(int type)
 {
     switch (type) {
@@ -253,9 +243,6 @@ static CallbackFunc select_callback(int type)
     }
 }
 
-/* ================================================================== */
-/* Required-example callback functions                                */
-/* ================================================================== */
 static void temperature_monitor(struct Device *dev)
 {
     float t = dev->reading.temperature;
@@ -286,21 +273,11 @@ static void battery_monitor(struct Device *dev)
     printf("[Battery]     %-16s %.2f V -> %s\n", dev->name, v, status);
 }
 
-/* ================================================================== */
-/* CUSTOM CALLBACK: reading_logger()                                   */
-/*                                                                     */
-/* Rationale: the three example callbacks each react to a single       */
-/* reading in isolation (threshold checks). This custom callback       */
-/* instead builds a persistent, dynamically allocated history of       */
-/* every reading that has been processed across the whole simulation,  */
-/* independent of device type, so the fleet's activity can be          */
-/* reviewed afterwards. It demonstrates dynamic memory management      */
-/* driven entirely from inside a callback.                             */
-/* ================================================================== */
+
 typedef struct {
     char  device_name[NAME_LEN];
     int   type;
-    float value;      /* pressure is stored widened to float for a uniform log */
+    float value;
 } LogEntry;
 
 static LogEntry *g_log = NULL;
@@ -317,7 +294,7 @@ static void reading_logger(struct Device *dev)
         g_log_capacity = new_capacity;
     }
 
-    LogEntry *entry = g_log + g_log_count;   /* pointer arithmetic */
+    LogEntry *entry = g_log + g_log_count;  
     strncpy(entry->device_name, dev->name, NAME_LEN - 1);
     entry->device_name[NAME_LEN - 1] = '\0';
     entry->type = dev->type;
@@ -342,7 +319,7 @@ static void print_log(void)
     printf("%-5s %-16s %-18s %-10s\n", "#", "Device", "Type", "Value");
     printf("-----------------------------------------------------------\n");
 
-    LogEntry *p = g_log;                /* pointer traversal */
+    LogEntry *p = g_log;
     for (int i = 0; i < g_log_count; i++, p++) {
         printf("%-5d %-16s %-18s %-10.2f\n",
                i + 1, p->device_name, type_name(p->type), p->value);
@@ -359,9 +336,7 @@ static void free_log(void)
     g_log_capacity = 0;
 }
 
-/* ================================================================== */
-/* Simulation: 10 random readings distributed across the fleet         */
-/* ================================================================== */
+
 static void run_simulation(struct Device *arr, int count)
 {
     if (count == 0) { printf("No devices available. Add a device first.\n"); return; }
@@ -370,30 +345,28 @@ static void run_simulation(struct Device *arr, int count)
 
     for (int i = 0; i < 10; i++) {
         int idx = rand() % count;
-        struct Device *dev = arr + idx;   /* pointer traversal to chosen device */
+        struct Device *dev = arr + idx;   
 
-        /* generate a random reading appropriate to the device's type,
-           written into the correct union member                     */
+
         switch (dev->type) {
             case TYPE_TEMPERATURE:
-                dev->reading.temperature = -20.0f + ((float)rand() / RAND_MAX) * 120.0f; /* -20..100 C */
+                dev->reading.temperature = -20.0f + ((float)rand() / RAND_MAX) * 120.0f; 
                 break;
             case TYPE_PRESSURE:
-                dev->reading.pressure = 900 + (rand() % 201); /* 900..1100 hPa */
+                dev->reading.pressure = 900 + (rand() % 201);
                 break;
             case TYPE_VOLTAGE:
-                dev->reading.voltage = 2.5f + ((float)rand() / RAND_MAX) * 2.5f; /* 2.5..5.0 V */
+                dev->reading.voltage = 2.5f + ((float)rand() / RAND_MAX) * 2.5f;
                 break;
         }
 
         printf("\nReading #%d -> %s\n", i + 1, dev->name);
 
-        /* dispatch to the type-specific monitor callback through the
-           required process_device() function-pointer interface       */
+
         CallbackFunc monitor = select_callback(dev->type);
         process_device(dev, monitor);
 
-        /* also dispatch to the custom logging callback                */
+
         process_device(dev, reading_logger);
     }
 
